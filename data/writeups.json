@@ -1,10 +1,16 @@
 [
   {
-  "title": "HTB Outbound",
-  "file": "outbound.html",
-  "os": "Windows",
-  "difficulty": "Medium",
-  "tags": ["AddKeyCredentialLink", "RCE", "LDAP", "Database Looting", "Local PrivEsc"]
-}
-
+    "title": "HTB Outbound",
+    "file": "outbound.html",
+    "os": "Windows",
+    "difficulty": "Medium",
+    "tags": ["AddKeyCredentialLink", "RCE", "LDAP", "Database Looting", "Local PrivEsc"]
+  },
+  {
+    "title": "MoEST Breach",
+    "file": "kazubreach.html",
+    "os": "Web",
+    "difficulty": "High",
+    "tags": ["Ransomware", "Nepal", "MoEST", "KAZU"]
+  }
 ]
