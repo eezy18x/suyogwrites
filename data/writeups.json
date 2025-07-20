@@ -1,0 +1,10 @@
+[
+  {
+  "title": "HTB Outbound",
+  "file": "outbound.html",
+  "os": "Windows",
+  "difficulty": "Medium",
+  "tags": ["AddKeyCredentialLink", "RCE", "LDAP", "Database Looting", "Local PrivEsc"]
+}
+
+]
